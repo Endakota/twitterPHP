@@ -58,23 +58,60 @@ function register_user($auth_data){
     if(empty($auth_data) || !isset($auth_data['pass']) || empty($auth_data['pass'])) return false;
     if(empty($auth_data) || !isset($auth_data['pass2']) || empty($auth_data['pass2'])) return false;
     $user = get_user_info($auth_data['login']);
-    /* ТЗ сделать проверку не меньше 3 и не больше 16 символов на пароль и логин */
+
     if(!empty($user)){
         $_SESSION['error'] = 'Пользователь ' . $auth_data["login"] .' уже сущетсвет';
         header("Location: ". get_url('register.php'));
         die();
     }
+    if(strlen($auth_data['login']) < 3){
+        $_SESSION['error'] = 'Логин слишком короткий';
+        header("Location: ". get_url('register.php'));
+        die();
+    }
+    if(strlen($auth_data['login']) > 12){
+        $_SESSION['error'] = 'Логин слишком длинный';
+        header("Location: ". get_url('register.php'));
+        die();
+    }
+    if(strlen($auth_data['pass']) < 5){
+        $_SESSION['error'] = 'Пароль слишком короткий';
+        header("Location: ". get_url('register.php'));
+        die();
+    }
+
     if($auth_data['pass'] !== $auth_data['pass2']){
         $_SESSION['error'] = 'Пароли не совпадают';
         header("Location: ". get_url('register.php'));
         die();
     }
+
     if(add_user($auth_data['login'], $auth_data['pass'])){
         header("Location: ". get_url('index.php'));
         die();
     }
 }
 function login($auth_data){
+    if(empty($auth_data) || !isset($auth_data['login']) || empty($auth_data['login'])) return false;
+    if(empty($auth_data) || !isset($auth_data['pass']) || empty($auth_data['pass'])) return false;
+
+    $user = get_user_info($auth_data['login']);
+
+    if(empty($user)){
+        $_SESSION['error'] = 'Пользователь '. $auth_data['login'] .' не найден';
+        header("Location: ". get_url());
+        die();
+    }
+    if(password_verify($auth_data['pass'], $user['pass'])){
+        $_SESSION['user'] = $user;
+        $_SESSION['error'] = '';
+        header("Location: ". get_url('user_posts.php?id='.$user['id']));
+        die();
+    }else{
+        $_SESSION['error'] = 'Пароль неверный';
+        header("Location: ". get_url());
+        die();
+    }
 
 }
 function get_error_message(){
